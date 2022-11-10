@@ -1,6 +1,8 @@
 var https = require("https");
 
-var config = require("./config.json");
+var cr_interact = require("./cr_interact")
+
+const config = require("./config.json");
 
 function getLists() {
     var query = `
@@ -28,7 +30,7 @@ function getLists() {
     `;
 
     var variables = {
-        'user': config.username
+        'user': config.anilist_username
     };
 
     const data = JSON.stringify({query: query, variables: variables});
@@ -105,8 +107,10 @@ function getEpisode(lists){
     const randLink = watchedLinks[Math.floor(Math.random() * watchedLinks.length)];
 
     //open episode in web browser
-    var start = (process.platform == 'darwin'? 'open': process.platform == 'win32'? 'start': 'xdg-open');
-    require('child_process').exec(start + ' ' + randLink);
+    // var start = (process.platform == 'darwin'? 'open': process.platform == 'win32'? 'start': 'xdg-open');
+    // require('child_process').exec(start + ' ' + randLink);
+
+    cr_interact.playVideo(randLink);
 }
 
 getLists();
