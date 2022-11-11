@@ -19,6 +19,8 @@ async function login(returnURL){
     await driver.findElement(By.name('email')).sendKeys(config.cr_username);
     await driver.findElement(By.name('password')).sendKeys(config.cr_password, Key.ENTER);
 
+    //FIXME: sometimes Enter key is not working for submission (TODO: click LOG IN button if enter doesn't work)
+
     //make sure we're redirected to the "already premium page"
     await driver.wait(until.urlContains('already-premium'), 15 * 1000);
 
