@@ -53,12 +53,20 @@ async function getLists() {
                 data += d;
             });
             res.on('end', () => {
-                resolve(JSON.parse(data).data);
+                try{
+                    resolve(JSON.parse(data).data);
+                }
+                catch (e){
+                    console.log("Unable to connect to anilist :(");
+                    //TODO: cache previous results in case this happens
+                }
             });
         });
 
         req.on('error', (error) => {
             console.error(error);
+            console.log("Unable to connect to anilist :(");
+            //TODO: cache previous results in case this happens
         });
 
         req.write(data);
