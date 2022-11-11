@@ -24,8 +24,6 @@ async function loginExternal(returnURL){
     //FIXME: sometimes Enter key is not working for submission (TODO: click LOG IN button if enter doesn't work)
 
     //make sure we're redirected to the "already premium page"
-    //TODO: catch timeout error here
-    //may need to login clicking the login button (different url with authid parameter...)
     await driver.wait(until.urlContains('already-premium'), 15 * 1000);
 
     console.log("Successfully logged in to Crunchyroll")
@@ -54,6 +52,8 @@ async function login(returnURL){
     await driver.findElement(By.name('username')).sendKeys(config.cr_username);
     await driver.findElement(By.name('password')).sendKeys(config.cr_password, Key.ENTER);
 
+    console.log("Logged in to Crunchyroll")
+
     playVideo(returnURL);
 }
 
@@ -79,10 +79,12 @@ async function playVideo(videoURL) {
             await driver.wait(until.elementLocated(By.className('video-player')), 15 * 1000);
             await driver.switchTo().frame(driver.findElement(By.className("video-player")));
 
-            //wait for video to buffer so play button appears, then click it
             console.log("Looking for play button...")
+
+            //wait for video to buffer so play button appears, then click it
             await driver.wait(until.elementLocated(By.css("[data-testid='vilos-large_play_pause_button']")), 60 * 1000);
             await driver.findElement(By.css("[data-testid='vilos-large_play_pause_button']")).click();
+
             console.log("Clicked play button, video now playing...")
 
             //click the fullscreen button
