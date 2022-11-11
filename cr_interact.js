@@ -7,7 +7,9 @@ const options = new chrome.Options();
 
 let driver = new Builder().forBrowser(Browser.CHROME).setChromeOptions(options).build();
 
-async function login(returnURL){
+//this is the first login system I made. it uses the old crunchyroll login, which seems
+//to have more bot protection, leaving here in case we need it, but really login() should be used instead..
+async function loginExternal(returnURL){
     //load login page
     await driver.get("https://www.crunchyroll.com/welcome/login");
     
@@ -29,6 +31,29 @@ async function login(returnURL){
     console.log("Successfully logged in to Crunchyroll")
 
     //we can attempt to play the video again now
+    playVideo(returnURL);
+}
+
+async function login(returnURL){
+    //click user menu
+    let userMenu = await driver.findElements(By.className('erc-anonymous-user-menu'));
+    await userMenu[0].click();
+
+    //click login
+    let signinOptions = await driver.findElements(By.className('nav-item-info'));
+    await signinOptions[1].click();
+
+    //wait for login page
+    await driver.wait(until.titleContains('Login'), 15 * 1000);
+
+    //wait for username and password fields to render
+    await driver.wait(until.elementLocated(By.name('username')), 15 * 1000);
+    await driver.wait(until.elementLocated(By.name('password')), 15 * 1000);
+    
+    //enter username and password
+    await driver.findElement(By.name('username')).sendKeys(config.cr_username);
+    await driver.findElement(By.name('password')).sendKeys(config.cr_password, Key.ENTER);
+
     playVideo(returnURL);
 }
 
