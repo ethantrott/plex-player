@@ -22,6 +22,8 @@ async function login(returnURL){
     //FIXME: sometimes Enter key is not working for submission (TODO: click LOG IN button if enter doesn't work)
 
     //make sure we're redirected to the "already premium page"
+    //TODO: catch timeout error here
+    //may need to login clicking the login button (different url with authid parameter...)
     await driver.wait(until.urlContains('already-premium'), 15 * 1000);
 
     console.log("Successfully logged in to Crunchyroll")
@@ -48,6 +50,12 @@ async function playVideo(videoURL) {
         else {
             console.log("No premium button, looks good to go");
 
+            console.log("looking for play button")
+            await driver.wait(until.elementLocated(By.css('*[data-testid="vilos-large_play_pause_button"]')), 15 * 1000);
+            console.log("found play button")
+            await driver.findElement(By.css('*[data-testid="vilos-large_play_pause_button"]')).click();
+
+            console.log("Clicked button")
             //TODO: click play, go fullscreen, trigger next episode after completion..
         }
     }
