@@ -1,8 +1,11 @@
-const { Builder, Browser, By, Key, until } = require('selenium-webdriver');
-
 const config = require("./config.json");
 
-let driver = new Builder().forBrowser(Browser.CHROME).build();
+const { Builder, Browser, By, Key, until } = require('selenium-webdriver');
+const chrome = require('selenium-webdriver/chrome'); 
+
+const options = new chrome.Options();
+
+let driver = new Builder().forBrowser(Browser.CHROME).setChromeOptions(options).build();
 
 async function login(returnURL){
     //load login page
@@ -30,6 +33,8 @@ async function playVideo(videoURL) {
     try {
         //load the crunchyroll page
         await driver.get(videoURL);
+
+        //TODO: Test for 404 ("Page not found" in title)
 
         //look for "Try Premium" button
         let premiumTag = await driver.findElements(By.className('erc-premium-header-link'));
