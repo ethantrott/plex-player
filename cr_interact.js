@@ -75,13 +75,21 @@ async function playVideo(videoURL) {
         else {
             console.log("No premium button, looks good to go");
 
-            console.log("looking for play button")
-            await driver.wait(until.elementLocated(By.css('*[data-testid="vilos-large_play_pause_button"]')), 15 * 1000);
-            console.log("found play button")
-            await driver.findElement(By.css('*[data-testid="vilos-large_play_pause_button"]')).click();
+            //have to switch to video player frame. why? idk, selenium.
+            await driver.wait(until.elementLocated(By.className('video-player')), 15 * 1000);
+            await driver.switchTo().frame(driver.findElement(By.className("video-player")));
 
-            console.log("Clicked button")
-            //TODO: click play, go fullscreen, trigger next episode after completion..
+            //wait for video to buffer so play button appears, then click it
+            console.log("Looking for play button...")
+            await driver.wait(until.elementLocated(By.css("[data-testid='vilos-large_play_pause_button']")), 60 * 1000);
+            await driver.findElement(By.css("[data-testid='vilos-large_play_pause_button']")).click();
+            console.log("Clicked play button, video now playing...")
+
+            //click the fullscreen button
+            await await driver.findElement(By.css("[data-testid='vilos-fullscreen_button']")).click();
+            console.log("Entered fullscreen")
+
+            //TODO: trigger next episode after completion..
         }
     }
     catch (e) {
