@@ -32,6 +32,7 @@ async function loginExternal(returnURL){
     playVideo(returnURL);
 }
 
+//login function that navigates using the on-page account menu
 async function login(returnURL){
     //click user menu
     let userMenu = await driver.findElements(By.className('erc-anonymous-user-menu'));
@@ -55,53 +56,128 @@ async function login(returnURL){
     console.log("Logged in to Crunchyroll")
 }
 
+// checks if we are in loading stage 1
+// (element with id "loader-svg" exists)
+async function loadingStage1() {
+    try{
+        //check for loading element 1
+        await driver.findElement(By.id("loader-svg"));
+        //if we get this far, loading element 1 exists
+        return true;
+    }
+    catch(e){
+        //if we get here, loading element 1 does not exist
+        return false
+    }
+}
+
+//checks if we are in loading stage 2
+//loading stage 2 is done when either the play button appears or the video autoplays
+//play button appears when navigating directly to the video page, autoplay happens when referred back by login system
+//fun note: i was originally checking [data-testid='vilos-loading'] was present,
+//          but that doesnt work because the loading svg stays existent
+//          the entire time, its just hidden behind the video player lmao
+async function loadingStage2() {
+    try{
+        //attempt to get play button
+        await driver.findElement(By.css("[data-testid='vilos-large_play_pause_button']"));
+
+        //if we get this far, the play button exists and loading has concluded
+        return false;
+    }
+    catch(e){
+        try{
+            // if we get here, the play button does not exist, we need to check for the in-player video controls
+            // to see if the video is autoplaying
+            await driver.findElement(By.css("[data-testid='vilos-fullscreen_button']"))
+
+            //if we get this far the fullscreen button exists and loading has concluded
+            return false;
+        }
+        catch (e){
+            //if we get here, neither the play or fullscreen button exist, loading continues
+            return true;
+        }
+        
+    }   
+}
+
+// completes when player is done loading
+// the Crunchyroll player has two loading stages
+// stage 1: loading the player itself
+// stage 2: buffering the content inside the player
+async function playerIsDoneLoading(){
+    // currently we only monitor stage 2
+    // we used to monitor loading stage 1, but I decided to scrap it because
+    // it served no purpose and will probably only break things in the future :)
+
+    // let isLoadingStage1 = true;
+    // while (isLoadingStage1){
+    //     isLoadingStage1 = await loadingStage1();
+    //     console.log(isLoadingStage1)
+    //     if (!isLoadingStage1) console.log("Loading stage 1 complete.")
+    // }
+
+    console.log("Waiting for player load...")
+
+    //wait for video player element to be created
+    await driver.wait(until.elementLocated(By.className('video-player')), 15 * 1000);
+
+    //need to be in the iframe for this (ugh)
+    await driver.switchTo().frame(driver.findElement(By.className("video-player")))
+
+    //wait for loading stage 2 to finish
+    let isLoadingStage2 = true;
+    while (isLoadingStage2) isLoadingStage2 = await loadingStage2();
+
+    console.log("Player finished loading.")
+
+    //exit iframe
+    await driver.switchTo().defaultContent();
+}
 
 async function playVideo(videoURL) {
-    try {
-        //load the crunchyroll page
-        await driver.get(videoURL);
+    //load the crunchyroll page
+    await driver.get(videoURL);
 
-        //TODO: Test for 404 ("Page not found" in title)
+    //TODO: Test for 404 ("Page not found" in title)
 
-        //look for "Try Premium" button
-        let premiumTag = await driver.findElements(By.className('erc-premium-header-link'));
-        //if "Try Premium" button exists, we need to sign in...
-        if (premiumTag.length > 0) {
-            console.log("User not signed in with premium, attempting login...")
-            await login(videoURL);
-        }
-        else console.log("No premium button, looks good to go");
-
-        //have to switch to video player frame. why? idk, selenium.
-        await driver.wait(until.elementLocated(By.className('video-player')), 15 * 1000);
-        await driver.switchTo().frame(driver.findElement(By.className("video-player")));
-
-        console.log("Looking for play button...")
-
-        //TODO: catch when theres no play button
-
-        //wait for video to buffer so play button appears, then click it
-        await driver.wait(until.elementLocated(By.css("[data-testid='vilos-large_play_pause_button']")), 60 * 1000);
-        await driver.findElement(By.css("[data-testid='vilos-large_play_pause_button']")).click();
-
-        console.log("Clicked play button, video now playing...")
-
-        //get time left in episode
-        let duration = await driver.findElement(By.css("video")).getAttribute("duration");
-        let progress = await driver.findElement(By.css("video")).getAttribute("currentTime");
-        console.log("Time left (sec): ", duration-progress);
-        //TODO: trigger next episode after completion..
-
-        //click the fullscreen button
-        await await driver.findElement(By.css("[data-testid='vilos-fullscreen_button']")).click();
-        console.log("Entered fullscreen")
+    //FIXME: sometimes (rarely) this misses the premium button
+    //look for "Try Premium" button
+    let premiumTag = await driver.findElements(By.className('erc-premium-header-link'));
+    //if "Try Premium" button exists, we need to sign in...
+    if (premiumTag.length > 0) {
+        console.log("User not signed in with premium, attempting login...")
+        await login(videoURL);
     }
-    catch (e) {
-        console.log(e);
+    else console.log("No premium button, looks good to go");
+
+    //wait for player to load
+    await playerIsDoneLoading();
+
+    //have to switch to video player frame. why? idk, selenium.
+    await driver.switchTo().frame(driver.findElement(By.className("video-player")));
+
+    //click play button if present
+    try{
+        let playButton = await driver.findElement(By.css("[data-testid='vilos-large_play_pause_button']"));
+        console.log("Found play button, clicking..")
+        await playButton.click();
+    } catch(e) {
+        console.log("No play button present, probably autoplayed");
     }
-    // finally {
-    //     await driver.quit();
-    // }
+
+    //click the fullscreen button
+    await driver.wait(until.elementLocated(By.css("[data-testid='vilos-fullscreen_button']")), 15 * 1000);
+    await driver.findElement(By.css("[data-testid='vilos-fullscreen_button']")).click();
+    console.log("Entered fullscreen")
+
+    //get time left in episode
+    let duration = await driver.findElement(By.css("video")).getAttribute("duration");
+    let progress = await driver.findElement(By.css("video")).getAttribute("currentTime");
+    console.log("Time left (sec): ", duration-progress);
+
+    //TODO: trigger next episode after episode completion..
 };
 
 module.exports.playVideo = playVideo;
