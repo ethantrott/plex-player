@@ -6,23 +6,23 @@ async function getLists() {
     var query = `
     query ($user: String) {
         MediaListCollection(userName: $user, type: ANIME) {
-        lists {
-            name
-            entries {
-            media {
-                title {
-                english
-                }
-                streamingEpisodes {
-                title
-                url
-                site
+            lists {
+                name
+                entries {
+                    media {
+                        title {
+                            english
+                        }
+                        streamingEpisodes {
+                            title
+                            url
+                            site
+                        }
+                    }
+                    progress
+                    score
                 }
             }
-            progress
-            score
-            }
-        }
         }
     }
     `;
