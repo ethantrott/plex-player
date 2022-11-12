@@ -6,6 +6,7 @@ var cr_interact = require("./cr_interact")
 
 var linkCache = {links:[], uses:0};
 
+//populate cache with anime links
 function updateCache(){
     console.log("Updating anilist cache..")
     return new Promise((resolve)=>{
@@ -31,6 +32,7 @@ function updateCache(){
     });
 }
 
+//returns a random link from the cache
 function chooseLink(){
     linkCache.uses++;
     if (linkCache.uses > 10){
@@ -40,6 +42,8 @@ function chooseLink(){
     return linkCache.links[Math.floor(Math.random() * linkCache.links.length)];
 }
 
+//plays random episode in crunchyroll
+//then starts another once that episode finishes
 async function getAndPlay(){
     console.log("Choosing episode...")
     let link = chooseLink();
@@ -52,4 +56,5 @@ async function getAndPlay(){
     });
 }
 
+//init
 updateCache().then(()=>getAndPlay());
