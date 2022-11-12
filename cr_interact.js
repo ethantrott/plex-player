@@ -13,20 +13,26 @@ async function loginExternal(returnURL){
     //load login page
     await driver.get("https://www.crunchyroll.com/welcome/login");
     
-    //wait for username and password fields to render
-    await driver.wait(until.elementLocated(By.name('email')), 15 * 1000);
-    await driver.wait(until.elementLocated(By.name('password')), 15 * 1000);
-    
-    //enter username and password
-    await driver.findElement(By.name('email')).sendKeys(config.cr_username);
-    await driver.findElement(By.name('password')).sendKeys(config.cr_password, Key.ENTER);
+    let currentUrl = await driver.getCurrentUrl();
+    if (!currentUrl.includes('already-premium')){
+        //wait for username and password fields to render
+        await driver.wait(until.elementLocated(By.name('email')), 15 * 1000);
+        await driver.wait(until.elementLocated(By.name('password')), 15 * 1000);
+        
+        //enter username and password
+        await driver.findElement(By.name('email')).sendKeys(config.cr_username);
+        await driver.findElement(By.name('password')).sendKeys(config.cr_password, Key.ENTER);
 
-    //FIXME: sometimes Enter key is not working for submission (TODO: click LOG IN button if enter doesn't work)
+        //FIXME: sometimes Enter key is not working for submission (TODO: click LOG IN button if enter doesn't work)
 
-    //make sure we're redirected to the "already premium page"
-    await driver.wait(until.urlContains('already-premium'), 15 * 1000);
+        //make sure we're redirected to the "already premium page"
+        await driver.wait(until.urlContains('already-premium'), 15 * 1000);
 
-    console.log("Successfully logged in to Crunchyroll")
+        console.log("Successfully logged in to Crunchyroll");
+    }
+    else {
+        console.log("Already logged in :)")
+    }
 
     //we can attempt to play the video again now
     playVideo(returnURL);
@@ -34,6 +40,8 @@ async function loginExternal(returnURL){
 
 //login function that navigates using the on-page account menu
 async function login(returnURL){
+    let videoTitle = await driver.getTitle();
+
     //click user menu
     let userMenu = await driver.findElements(By.className('erc-anonymous-user-menu'));
     await userMenu[0].click();
@@ -53,11 +61,20 @@ async function login(returnURL){
     await driver.findElement(By.name('username')).sendKeys(config.cr_username);
     await driver.findElement(By.name('password')).sendKeys(config.cr_password, Key.ENTER);
 
-    console.log("Logged in to Crunchyroll")
+    //make sure we get sent back to the video. if we don't, try backup login..
+    try{
+        await driver.wait(until.titleIs(videoTitle), 15*1000);
+        console.log("Logged in to Crunchyroll (primary method)")
+    }
+    catch(e){
+        console.log("Did not get sent back from login sequence. Trying backup login method...");
+        loginExternal(returnURL);
+    }
 }
 
 // checks if we are in loading stage 1
 // (element with id "loader-svg" exists)
+// FIXME: pretty sure this can be cleaned up with `until.StalenessOf()`
 async function loadingStage1() {
     try{
         //check for loading element 1
