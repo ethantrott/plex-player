@@ -138,6 +138,8 @@ async function playerIsDoneLoading(){
     console.log("Waiting for player load...")
 
     //wait for video player element to be created
+    //FIXME:    this times out if we're getting rate-limited
+    //          (they redirect back to a 404 from login)
     await driver.wait(until.elementLocated(By.className('video-player')), 15 * 1000);
 
     //need to be in the iframe for this (ugh)
@@ -153,11 +155,43 @@ async function playerIsDoneLoading(){
     await driver.switchTo().defaultContent();
 }
 
+// completes when the video is finished
+// completion conditions:
+// - time left is <1 second (video finishes naturally)
+// - webdriver url changes (user skips video or we miss the time check before crunchyroll autoplays another video)
+async function videoIsFinished(){
+    let done = false;
+    let videoUrl = await driver.getCurrentUrl();
+    console.log("Changing url:" + videoUrl);
+    while (!done){
+        let currentUrl = await driver.getCurrentUrl();
+        if (videoUrl !== currentUrl){
+            console.log("Video URL changed, video must be done.")
+            done = true;
+        }
+        else{
+            //get time left in episode
+            let duration = await driver.findElement(By.css("video")).getAttribute("duration");
+            let progress = await driver.findElement(By.css("video")).getAttribute("currentTime");
+            let remaining = duration-progress;
+
+            if (remaining < 1) {
+                console.log("Episode has no runtime left.")
+                done = true;
+            }
+        }
+    }
+
+}
+
 async function playVideo(videoURL) {
     //load the crunchyroll page
     await driver.get(videoURL);
 
-    //TODO: Test for 404 ("Page not found" in title)
+    //if we get a 404 page, immediately return
+    //so we can try a different video
+    let videoTitle = await driver.getTitle();
+    if (videoTitle.includes("Page not found")) return new Promise((resolve) => {resolve()});
 
     //FIXME: sometimes (rarely) this misses the premium button
     //look for "Try Premium" button
@@ -178,7 +212,7 @@ async function playVideo(videoURL) {
     //click play button if present
     try{
         let playButton = await driver.findElement(By.css("[data-testid='vilos-large_play_pause_button']"));
-        console.log("Found play button, clicking..")
+        console.log("Found play button, clicking..");
         await playButton.click();
     } catch(e) {
         console.log("No play button present, probably autoplayed");
@@ -187,14 +221,11 @@ async function playVideo(videoURL) {
     //click the fullscreen button
     await driver.wait(until.elementLocated(By.css("[data-testid='vilos-fullscreen_button']")), 15 * 1000);
     await driver.findElement(By.css("[data-testid='vilos-fullscreen_button']")).click();
-    console.log("Entered fullscreen")
-
-    //get time left in episode
-    let duration = await driver.findElement(By.css("video")).getAttribute("duration");
-    let progress = await driver.findElement(By.css("video")).getAttribute("currentTime");
-    console.log("Time left (sec): ", duration-progress);
-
-    //TODO: trigger next episode after episode completion..
+    console.log("Entered fullscreen");
+    
+    return new Promise((resolve) => {
+        resolve(videoIsFinished());
+    });
 };
 
 module.exports.playVideo = playVideo;

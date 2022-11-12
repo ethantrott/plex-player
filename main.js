@@ -9,7 +9,10 @@ async function getAndPlay(){
     anilist.randLink.then((link)=>{
         console.log("Chose: "+ link);
         console.log("Automating episode playback...")
-        cr_interact.playVideo(link);
+        cr_interact.playVideo(link).then(()=>{
+            console.log("Video is finished, starting another..");
+            getAndPlay();
+        });
     });
 }
 
