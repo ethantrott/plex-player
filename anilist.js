@@ -1,3 +1,4 @@
+const { watch } = require("fs");
 var https = require("https");
 
 const config = require("./config.json");
@@ -57,16 +58,15 @@ async function getLists() {
                     resolve(JSON.parse(data).data);
                 }
                 catch (e){
-                    console.log("Unable to connect to anilist :(");
-                    //TODO: cache previous results in case this happens
+                    console.log("Got gibberish from anilist :(");
+                    resolve();
                 }
             });
         });
 
         req.on('error', (error) => {
-            console.error(error);
-            console.log("Unable to connect to anilist :(");
-            //TODO: cache previous results in case this happens
+            console.log(error);
+            resolve();
         });
 
         req.write(data);
@@ -74,7 +74,7 @@ async function getLists() {
     });
 }
 
-function getEpisode(lists){
+function getEpisodes(lists){
     //maybe add Dropped?
     const weCareAboutThese = ["Completed", "Paused", "Watching"];
 
@@ -111,14 +111,18 @@ function getEpisode(lists){
         }
     });
 
-    //choose random episode from the list
-    const randLink = watchedLinks[Math.floor(Math.random() * watchedLinks.length)];
-
-    return randLink;
+    return watchedLinks;
 }
 
-module.exports.randLink = new Promise((resolve) => {
-    getLists().then((l)=>{
-        resolve(getEpisode(l));
+function getLinks() {
+    return new Promise((resolve) => {
+        getLists().then((l)=>{
+            if (l){
+                resolve(getEpisodes(l));
+            }
+            else resolve();
+        });
     });
-});
+}
+
+module.exports.getLinks = getLinks;

@@ -1,8 +1,4 @@
-// Aniplayer
-// 2022 Ethan Trott
-
 var anilist = require("./anilist");
-var cr_interact = require("./cr_interact")
 
 var linkCache = {links:[], uses:0};
 
@@ -40,13 +36,18 @@ function chooseLink(){
     return linkCache.links[Math.floor(Math.random() * linkCache.links.length)];
 }
 
+async function playVideo(){
+    return new Promise(resolve => setTimeout(resolve, 1000));
+    //return new Promise(resolve => resolve());
+}
+
 async function getAndPlay(){
     console.log("Choosing episode...")
     let link = chooseLink();
     console.log("Chose: ", link);
 
     console.log("Automating episode playback...")
-    cr_interact.playVideo(link).then(()=>{
+    playVideo().then(()=>{
         console.log("Video is finished, starting another..");
         getAndPlay();
     });
