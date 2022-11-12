@@ -188,12 +188,16 @@ async function playVideo(videoURL) {
     //load the crunchyroll page
     await driver.get(videoURL);
 
-    //if we get a 404 page, immediately return
-    //so we can try a different video
-    let videoTitle = await driver.getTitle();
-    if (videoTitle.includes("Page not found")) return new Promise((resolve) => {resolve()});
+    //wait a second to allow title + premium button to load
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-    //FIXME: sometimes (rarely) this misses the premium button
+    //if we get a 404 page, immediately return so we can try a different video
+    const badTitles = ["Watch Popular Anime", "Page not found", "Error occurred"];
+    let videoTitle = await driver.getTitle();
+    badTitles.forEach((t)=>{
+        if (videoTitle.includes(t)) return new Promise((resolve) => {resolve()});
+    }); 
+
     //look for "Try Premium" button
     let premiumTag = await driver.findElements(By.className('erc-premium-header-link'));
     //if "Try Premium" button exists, we need to sign in...
