@@ -194,9 +194,15 @@ async function playVideo(videoURL) {
     //if we get a 404 page, immediately return so we can try a different video
     const badTitles = ["Watch Popular Anime", "Page not found", "Error occurred"];
     let videoTitle = await driver.getTitle();
+    let error = false;
     badTitles.forEach((t)=>{
-        if (videoTitle.includes(t)) return new Promise((resolve) => {resolve()});
+        if (videoTitle.includes(t)) {
+            console.log("404'd")
+            error = true;
+            return;
+        }
     }); 
+    if (error) return Promise.resolve();
 
     //look for "Try Premium" button
     let premiumTag = await driver.findElements(By.className('erc-premium-header-link'));
