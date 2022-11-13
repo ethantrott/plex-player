@@ -162,7 +162,6 @@ async function playerIsDoneLoading(){
 async function videoIsFinished(){
     let done = false;
     let videoUrl = await driver.getCurrentUrl();
-    console.log("Changing url:" + videoUrl);
     while (!done){
         let currentUrl = await driver.getCurrentUrl();
         if (videoUrl !== currentUrl){
