@@ -52,6 +52,7 @@ async function getAndPlay(){
     console.log("Automating episode playback...")
     cr_interact.playVideo(link).then(()=>{
         console.log("Video is finished, starting another..");
+        console.log("---------------------")
         getAndPlay();
     });
 }
