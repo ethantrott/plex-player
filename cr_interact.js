@@ -4,6 +4,8 @@ const { Builder, Browser, By, Key, until, Origin } = require('selenium-webdriver
 const chrome = require('selenium-webdriver/chrome'); 
 
 const options = new chrome.Options();
+options.addArguments(["--disable-infobars", "--disable-automation"]);
+options.excludeSwitches(["enable-automation"]);
 
 let driver = new Builder().forBrowser(Browser.CHROME).setChromeOptions(options).build();
 
