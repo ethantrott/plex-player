@@ -1,11 +1,13 @@
 const config = require("./config.json");
 
-const { Builder, Browser, By, Key, until } = require('selenium-webdriver');
+const { Builder, Browser, By, Key, until, Origin } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome'); 
 
 const options = new chrome.Options();
 
 let driver = new Builder().forBrowser(Browser.CHROME).setChromeOptions(options).build();
+
+let isPaused = false;
 
 //this is the first login system I made. it uses the old crunchyroll login, which seems
 //to have more bot protection, leaving here in case we need it, but really login() should be used instead..
@@ -232,9 +234,66 @@ async function playVideo(videoURL) {
     await driver.findElement(By.css("[data-testid='vilos-fullscreen_button']")).click();
     console.log("Entered fullscreen");
     
+    isPaused = false;
+
     return new Promise((resolve) => {
         resolve(videoIsFinished());
     });
 };
 
+async function clickPauseToggle(){
+    await moveMouse();
+
+    //click the play/pause button
+    await driver.wait(until.elementLocated(By.css("[data-testid='vilos-play_pause_button']")), 15 * 1000);
+    await driver.findElement(By.css("[data-testid='vilos-play_pause_button']")).click();
+
+    resetMouse();
+
+    isPaused = !isPaused;
+    console.log("Toggled video pause.");
+}
+
+async function pauseVideo(){
+    if (!isPaused) clickPauseToggle();
+    else console.log("video is already paused")
+}
+
+async function resumeVideo(){
+    if (isPaused) clickPauseToggle();
+    else console.log("video is already playing")
+}
+
+async function skipVideo(){
+    await moveMouse();
+
+    //click the skip button
+    await driver.wait(until.elementLocated(By.css("[data-testid='vilos-next_episode_button']")), 15 * 1000);
+    await driver.findElement(By.css("[data-testid='vilos-next_episode_button']")).click();
+
+    resetMouse();
+
+    isPaused = false;
+    console.log("Skipped episode");
+}
+
+async function moveMouse(){
+    driver.actions().move({
+        origin: 'pointer',
+        x: 20,
+        y: 20
+    }).perform();
+}
+
+async function resetMouse(){
+    driver.actions().move({
+        origin: 'viewport',
+        x: 20,
+        y: 20
+    }).perform();
+}
+
 module.exports.playVideo = playVideo;
+module.exports.pauseVideo = pauseVideo;
+module.exports.resumeVideo = resumeVideo;
+module.exports.skipVideo = skipVideo;

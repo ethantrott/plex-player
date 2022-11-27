@@ -2,7 +2,8 @@
 // 2022 Ethan Trott
 
 var anilist = require("./anilist");
-var cr_interact = require("./cr_interact")
+var cr_interact = require("./cr_interact");
+var control_api = require("./control_api.js");
 
 var linkCache = {links:[], uses:0};
 
