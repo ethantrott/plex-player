@@ -138,8 +138,8 @@ async function moveMouse(){
 async function resetMouse(){
     driver.actions().move({
         origin: 'viewport',
-        x: 20,
-        y: 20
+        x: 200,
+        y: 200
     }).perform();
 }
 
