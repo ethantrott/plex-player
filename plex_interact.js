@@ -11,8 +11,6 @@ let driver = new Builder().forBrowser(Browser.CHROME).setChromeOptions(options).
 
 let isPaused = false;
 
-//this is the first login system I made. it uses the old crunchyroll login, which seems
-//to have more bot protection, leaving here in case we need it, but really login() should be used instead..
 async function loginExternal(returnURL){
     //load login page
     await driver.get("https://app.plex.tv/desktop/#!/login");
@@ -58,8 +56,6 @@ async function playVideo(videoURL) {
 
     //if "Sign In" button exists or we are brought to the login page, we need to sign in...
     if (signInButton.length > 0 || currentURL.indexOf("auth")!=-1) {
-        // console.log(signInButton.length);
-        // console.log(currentURL);
         console.log("User not signed in, attempting login...")
         await loginExternal(videoURL);
     }
