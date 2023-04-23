@@ -65,6 +65,17 @@ async function playVideo(videoURL) {
     await driver.wait(until.elementLocated(By.css("[data-testid='toolbarShuffle")), 15 * 1000);
     await driver.findElement(By.css("[data-testid='toolbarShuffle']")).click();
 
+    //click the repeat button if not on
+    await driver.wait(until.elementLocated(By.css("[data-testid='repeatButton")), 15 * 1000);
+    let repeatButton = await driver.findElement(By.css("[data-testid='repeatButton']"));
+    await repeatButton.getAttribute("class").then((classes)=> {
+        //if there is not isActive class..
+        if (classes.indexOf("isActive" == -1)){
+            //turn on repeat
+            repeatButton.click();
+        }
+    });
+
     //click the fullscreen button
     await driver.wait(until.elementLocated(By.css("[data-testid='fullscreenButton']")), 15 * 1000);
     await driver.findElement(By.css("[data-testid='fullscreenButton']")).click();
