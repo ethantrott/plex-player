@@ -6,7 +6,7 @@ var express = require('express');
 var app = express();
 let exec = require('child_process').exec;
 
-var cr_interact = require("./cr_interact");
+var cr_interact = require("./plex_interact");
 
 app.get('/displayon', function (req, res) {
     res.send("ok");
